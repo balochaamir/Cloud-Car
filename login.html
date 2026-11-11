@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in | Cloud Car</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="auth">
+  <div class="auth-card">
+    <h1 id="h">Welcome back</h1>
+    <p class="sub" id="s">Sign in to see your saved cars and test drive bookings.</p>
+    <div class="seg" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-m="in">Sign in</button>
+      <button type="button" role="tab" aria-selected="false" data-m="up">Register</button>
+    </div>
+    <form id="form" novalidate>
+      <div class="field" id="nm" hidden><label for="name">Full name</label><input id="name" autocomplete="name"></div>
+      <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-blue btn-lg" id="go" type="submit">Sign in</button>
+      <div class="msg" id="msg" role="status"></div>
+    </form>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="assets/app.js"></script>
+<script>
+renderChrome('login');
+const $=id=>document.getElementById(id);let mode='in';
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+  mode=b.dataset.m;document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  $('nm').hidden=mode==='in';$('go').textContent=mode==='in'?'Sign in':'Create account';
+  $('h').textContent=mode==='in'?'Welcome back':'Create your account';
+  $('s').textContent=mode==='in'?'Sign in to see your saved cars and test drive bookings.':'Save cars you like and book test drives faster.';
+  $('pw').autocomplete=mode==='in'?'current-password':'new-password';$('msg').classList.remove('show')}));
+$('form').addEventListener('submit',e=>{e.preventDefault();const m=$('msg');m.classList.add('show');
+  if(!$('email').value||!$('email').validity.valid){m.textContent='Enter a valid email address.';return}
+  if($('pw').value.length<8){m.textContent='Use a password with at least 8 characters.';return}
+  m.textContent='Accounts are not connected yet. This is the page design only, and nothing was saved.'});
+</script>
+</body>
+</html>

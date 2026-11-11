@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Used cars for sale | Cloud Car</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+<section class="page-head"><div class="wrap"><h1 id="title">Used cars for sale</h1><p id="count">Loading cars</p></div></section>
+<div class="wrap inv">
+  <aside class="filters" aria-label="Filters">
+    <h2>Filter cars</h2>
+    <div class="field"><label for="q">Search</label><input id="q" type="search" placeholder="Make or model"></div>
+    <div class="field"><label for="type">Body type</label><select id="type"><option value="">All types</option></select></div>
+    <div class="field"><label for="make">Make</label><select id="make"><option value="">All makes</option></select></div>
+    <div class="field"><label for="fuel">Fuel</label><select id="fuel"><option value="">Any fuel</option></select></div>
+    <div class="field"><label for="max">Maximum price: <span class="range-val" id="maxv"></span></label><input id="max" type="range"></div>
+    <button class="btn btn-line" id="reset" type="button">Clear filters</button>
+  </aside>
+  <section>
+    <div class="inv-top"><strong id="shown"></strong>
+      <div class="field"><label for="sort" style="display:none">Sort</label><select id="sort"><option value="new">Newest first</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="miles">Lowest mileage</option></select></div></div>
+    <div class="card-grid" id="grid"></div>
+  </section>
+</div>
+</main>
+<div id="site-footer"></div>
+<script src="assets/app.js"></script>
+<script>
+renderChrome('inv');
+const $=id=>document.getElementById(id), P=new URLSearchParams(location.search);
+(async()=>{
+  const cars=await loadCars();
+  if(!cars){dataError($('grid'));$('count').textContent='';return}
+  const fill=(el,vals)=>[...new Set(vals)].sort().forEach(v=>el.add(new Option(v,v)));
+  fill($('type'),cars.map(c=>c.type));fill($('make'),cars.map(c=>c.make));fill($('fuel'),cars.map(c=>c.fuel));
+  const top=Math.ceil(Math.max(...cars.map(c=>c.price))/1000)*1000;
+  $('max').min=0;$('max').max=top;$('max').step=500;$('max').value=P.get('max')||top;
+  $('type').value=P.get('type')||'';$('make').value=P.get('make')||'';$('fuel').value=P.get('fuel')||'';
+  function draw(){
+    const q=$('q').value.trim().toLowerCase(),max=+$('max').value;$('maxv').textContent=money(max);
+    let l=cars.filter(c=>(!$('type').value||c.type===$('type').value)&&(!$('make').value||c.make===$('make').value)&&(!$('fuel').value||c.fuel===$('fuel').value)&&c.price<=max&&(!q||(c.make+' '+c.model).toLowerCase().includes(q)));
+    const s=$('sort').value;
+    l.sort(s==='low'?(a,b)=>a.price-b.price:s==='high'?(a,b)=>b.price-a.price:s==='miles'?(a,b)=>a.mileage-b.mileage:(a,b)=>(b.added||0)-(a.added||0));
+    $('shown').textContent=l.length+(l.length===1?' car':' cars')+' found';
+    $('count').textContent=cars.length+' used cars in stock';
+    $('title').textContent=$('type').value?plural($('type').value)+' for sale':'Used cars for sale';
+    $('grid').innerHTML=l.length?l.map(c=>carCard(c,{enquire:true})).join(''):'<div class="empty"><b>No cars match these filters</b>Raise the maximum price or clear the filters.</div>';
+  }
+  ['q','type','make','fuel','max','sort'].forEach(id=>$(id).addEventListener('input',draw));
+  $('reset').addEventListener('click',()=>{['q','type','make','fuel'].forEach(id=>$(id).value='');$('max').value=top;draw()});
+  draw();
+})();
+</script>
+</body>
+</html>

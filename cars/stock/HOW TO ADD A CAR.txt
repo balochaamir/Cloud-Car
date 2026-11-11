@@ -1,0 +1,48 @@
+HOW TO ADD A CAR
+================
+
+1. Make a new folder inside this "stock" folder.
+2. Name it exactly like this:
+
+       Make Model - Year - Price
+
+   Examples:
+       Toyota Corolla Hybrid - 2019 - 21990
+       Hyundai i30 - 2020 - 16500
+       Kia Sportage - 2021 - 28900
+
+   Price is in Australian dollars, numbers only (no $ or comma needed).
+3. Put the car's photos in that folder (.jpg, .png or .webp).
+4. Refresh the website. The car appears by itself, with all its photos.
+
+COVER PHOTO
+The first photo shown on the car's card is the one named "cover" (for
+example cover.jpg). If there is no file called cover, the first photo by
+file name is used. Rename your best front or side photo to cover.jpg.
+
+TO CHANGE THE PRICE
+Rename the folder (change the number at the end).
+
+TO REMOVE A CAR
+Delete its folder (or move it out of "stock").
+
+OPTIONAL EXTRA DETAILS
+Add a text file called  details.json  inside the car's folder to show more
+information. Example (only include what you want to set):
+
+    {
+      "type": "SUV",
+      "fuel": "Petrol",
+      "transmission": "Automatic",
+      "mileage": 82000,
+      "color": "Grey",
+      "wasPrice": 25900,
+      "description": "One owner, full service history."
+    }
+
+type can be: Sedan, Hatchback, SUV, Truck, Luxury, Van.
+If you leave type out, the website guesses it from the model name.
+wasPrice (old price) shows a "Save $" badge. "sold": true hides the car.
+
+NOTE: the website must be started with  node serve.mjs  (from the Cloud Car
+folder) for new folders to be detected automatically.
