@@ -75,7 +75,7 @@ function readStock() {
 let sharp = null;
 try { sharp = (await import('sharp')).default; } catch { console.log('sharp not installed: photos will be served at original size (run npm install)'); }
 const cacheDir = path.join(root, 'cars', '.cache');
-const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+const SIZES = new Set(['800x600', '168x126', '1600x1200', '640x320']);   // sizes used by the front end
 
 const inflight = new Map();
 async function makeImage(src, out, w, h, fit) {
@@ -101,7 +101,8 @@ async function serveImage(url, res) {
     const rel = decodeURIComponent(q.get('p') || '');
     const src = path.normalize(path.join(root, rel));
     if (!src.startsWith(stockDir) || !IMG.test(src) || !fs.existsSync(src)) { res.writeHead(404); return res.end('Not found'); }
-    const w = clamp(+q.get('w') || 800, 40, 2400), h = clamp(+q.get('h') || 600, 40, 2400);
+    const w = +q.get('w'), h = +q.get('h');
+    if (!SIZES.has(w + 'x' + h)) { res.writeHead(400); return res.end('Size not allowed'); }
     const fit = q.get('fit') === 'inside' ? 'inside' : 'cover';
     const st = fs.statSync(src);
     const key = Buffer.from(`${rel}|${w}|${h}|${fit}|${st.mtimeMs}`).toString('base64url').slice(-90);
@@ -127,8 +128,13 @@ http.createServer((req, res) => {
     return res.end(JSON.stringify({ currency: '$', cars: readStock() }));
   }
   if (urlPath.endsWith('/')) urlPath += 'index.html';
-  const file = path.normalize(path.join(root, urlPath));
-  if (!file.startsWith(root)) { res.writeHead(403); return res.end('Forbidden'); }
+  const file = path.resolve(root, '.' + path.sep + urlPath);
+  const rel = path.relative(root, file);
+  const parts = rel.split(path.sep);
+  const allowed = rel && !rel.startsWith('..') && !path.isAbsolute(rel) &&
+    !parts.some(p => p.startsWith('.')) &&                               // no .git, .cache, .gitignore
+    (parts.length === 1 ? /.html$/i.test(rel) : (parts[0] === 'assets' || (parts[0] === 'cars' && parts[1] === 'stock')));
+  if (!allowed) { res.writeHead(403, { 'Content-Type': 'text/plain' }); return res.end('Forbidden'); }
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
     res.writeHead(200, { 'Content-Type': types[path.extname(file).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
